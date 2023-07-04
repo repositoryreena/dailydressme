@@ -60,15 +60,9 @@ function App() {
     return `${day} ${date} ${month}  ${year}`;
   };
 
-  const playAudio = (weatherCondition, temperature) => {
-    if (weatherCondition === "Snow" || weatherCondition === "Rain") {
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
-      audioRef.current = new Audio("/letitgo.mp3");
-      audioRef.current.play();
-    } else if (weatherCondition === "Clear" || weatherCondition === "Clouds") {
-      if (temperature > 16) {
+  useEffect(() => {
+    if (typeof weather.weather !== "undefined" && typeof weather.main !== "undefined") {
+      if (weather.main.temp > 16) {
         if (audioRef.current) {
           audioRef.current.pause();
         }
@@ -81,12 +75,6 @@ function App() {
         audioRef.current = new Audio("/letitgo.mp3");
         audioRef.current.play();
       }
-    }
-  };
-
-  useEffect(() => {
-    if (typeof weather.weather !== "undefined" && typeof weather.main !== "undefined") {
-      playAudio(weather.weather[0].main, weather.main.temp);
     }
   }, [weather]);
 
