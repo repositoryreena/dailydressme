@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState } from "react";
 import "./styles.css";
 
 const api = {
@@ -8,117 +8,152 @@ const api = {
 
 function App() {
   const [query, setQuery] = useState("");
-  const [weather, setWeather] = useState({});
-  const audioRef = useRef(null);
+  const [weather, setWeather] = useState(null);
+  const [style, setStyle] = useState("");
+  const [gender, setGender] = useState("");
+  const [outfit, setOutfit] = useState("");
+  const [outfitImage, setOutfitImage] = useState("");
 
   const search = (evt) => {
     if (evt.key === "Enter") {
-      if (audioRef.current) {
-        audioRef.current.pause();
+      if (!query || !style || !gender) {
+        alert("Please fill in all fields.");
+        return;
       }
 
       fetch(`${api.base}weather?q=${query}&units=metric&APPID=${api.key}`)
         .then((res) => res.json())
         .then((result) => {
+          if (result.cod !== 200) {
+            alert("City not found. Please try again.");
+            return;
+          }
+
           setWeather(result);
           setQuery("");
-          console.log(result);
+          generateOutfit(result.main.temp);
         });
     }
   };
 
-  const dateBuilder = (d) => {
-    let months = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December"
-    ];
-    let days = [
-      "Sunday",
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday"
-    ];
+  const generateOutfit = (temp) => {
+    let rec = "";
+    let img = "";
 
-    let day = days[d.getDay()];
-    let date = d.getDate();
-    let month = months[d.getMonth()];
-    let year = d.getFullYear();
+    if (gender === "female") {
+      if (style === "casual") {
+        if (temp > 20) {
+          rec = "1950s sundress with a cinched waist, cat-eye sunglasses, and ballet flats.";
+          img = "/images/female-casual-warm.webp";
+        } else if (temp > 10) {
+          rec = "High-waisted capri pants with a cardigan and saddle shoes.";
+          img = "/images/female-casual-mild.jpg";
+        } else {
+          rec = "Wool skirt suit, beret, and a structured coat with gloves.";
+          img = "/images/female-casual-cold.jpg";
+        }
+      } else {
+        if (temp > 20) {
+          rec = "Elegant tea-length dress with pearls and kitten heels.";
+          img = "/images/female-formal-warm.jpg";
+        } else if (temp > 10) {
+          rec = "Long-sleeve sheath dress with a swing coat and heeled pumps.";
+          img = "/images/female-formal-mild.webp";
+        } else {
+          rec = "Wool overcoat, pencil skirt, gloves, and a vintage handbag.";
+          img = "/images/female-formal-cold.webp";
+        }
+      }
+    } else if (gender === "male") {
+      if (style === "casual") {
+        if (temp > 20) {
+          rec = "Short-sleeved button-up shirt tucked into high-waisted trousers with loafers.";
+          img = "/images/male-casual-warm.jpg";
+        } else if (temp > 10) {
+          rec = "Letterman jacket, cuffed jeans, and lace-up boots.";
+          img = "/images/male-casual-mild.jpg";
+        } else {
+          rec = "Thick knit sweater under a pea coat with wool trousers and leather gloves.";
+          img = "/images/male-casual-cold.jpg";
+        }
+      } else {
+        if (temp > 20) {
+          rec = "Lightweight sport coat over a collared shirt, suspenders, and polished shoes.";
+          img = "/images/male-formal-warm.jpg";
+        } else if (temp > 10) {
+          rec = "Classic grey suit with a fedora and Oxford shoes.";
+          img = "/images/male-formal-mild.jpg";
+        } else {
+          rec = "Double-breasted wool coat, scarf, and leather dress gloves.";
+          img = "/images/male-formal-cold.webp";
+        }
+      }
+    } else {
+      if (style === "casual") {
+        if (temp > 20) {
+          rec = "Short-sleeve knit top, pleated slacks, and vintage sneakers.";
+          img = "/images/neutral-casual-warm.jpg";
+        } else if (temp > 10) {
+          rec = "Cable-knit sweater, wide-leg trousers, and a bomber jacket.";
+          img = "/images/neutral-casual-mild.jpg";
+        } else {
+          rec = "Wool duster coat, gloves, and sturdy vintage boots.";
+          img = "/images/neutral-casual-cold.jpg";
+        }
+      } 
+    }
 
-    return `${day} ${date} ${month}  ${year}`;
+    setOutfit(rec);
+    setOutfitImage(img);
   };
 
-  useEffect(() => {
-    if (typeof weather.weather !== "undefined" && typeof weather.main !== "undefined") {
-      if (weather.main.temp > 16) {
-        if (audioRef.current) {
-          audioRef.current.pause();
-        }
-        audioRef.current = new Audio("/summer.mp3");
-        audioRef.current.play();
-      } else {
-        if (audioRef.current) {
-          audioRef.current.pause();
-        }
-        audioRef.current = new Audio("/letitgo.mp3");
-        audioRef.current.play();
-      }
-    }
-  }, [weather]);
-
   return (
-    <div
-      className={
-        typeof weather.main !== "undefined"
-          ? weather.main.temp > 16
-            ? "app warm"
-            : "app"
-          : "app"
-      }
-    >
+    <div className="app vintage">
       <main>
-        <div className="search-box">
+        <h1>1950s Outfit Recommender</h1>
+        <div className="options">
+          <select value={style} onChange={(e) => setStyle(e.target.value)}>
+            <option value="">Select style</option>
+            <option value="casual">Casual</option>
+            <option value="formal">Formal</option>
+          </select>
+
+          <select value={gender} onChange={(e) => setGender(e.target.value)}>
+            <option value="">Select gender</option>
+            <option value="female">Female</option>
+            <option value="male">Male</option>
+          </select>
+
           <input
-            onChange={(e) => setQuery(e.target.value)}
             type="text"
             className="search-bar"
             placeholder="Enter city..."
             value={query}
+            onChange={(e) => setQuery(e.target.value)}
             onKeyPress={search}
           />
         </div>
-        {typeof weather.main !== "undefined" ? (
-          <div>
-            <div className="location-box">
-              <div className="location">
-                {weather.name}, {weather.sys.country}
-              </div>
-              <div className="date">{dateBuilder(new Date())}</div>
-              <div className="weather-box">
-                <div className="temp">{Math.round(weather.main.temp)}ºc</div>
-                <div className="weather">{weather.weather[0].main}</div>
-              </div>
+
+        {weather && outfit && (
+          <div className="results">
+            <h2>
+              {weather.name}, {weather.sys.country}
+            </h2>
+            <p>{Math.round(weather.main.temp)}°C, {weather.weather[0].main}</p>
+            <div className="outfit-box">
+              <h3>Your 1950s Look:</h3>
+              <p>{outfit}</p>
+              {outfitImage && (
+                <img
+                  src={outfitImage}
+                  alt="Vintage outfit"
+                  className="outfit-image"
+                />
+              )}
             </div>
           </div>
-        ) : (
-          ""
         )}
       </main>
-      <audio ref={audioRef} id="audio">
-        <source src="/summer.mp3" type="audio/mpeg" />
-      </audio>
     </div>
   );
 }
